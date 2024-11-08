@@ -1,0 +1,32 @@
+#!/bin/sh
+#aszur list updater
+TMPDIR='/tmp'
+BOUQUETDIR='/etc/enigma2/'
+PICONDIR='/usr/share/enigma2/picon/'
+mkdir -p $TMPDIR/update
+# Clear update directory
+rm -R -f $TMPDIR/update/* 2>/dev/null
+cd $TMPDIR/update
+# download bouquets in zip form
+curl -LJO http://example.com/updatelist.zip
+sleep 2
+unzip updatelist.zip
+sleep 2
+# remove old channel lists from STB - CAUTION THIS WILL DELETE ALL YOUR OLD BOUQUETS
+rm -rf /etc/enigma2/lamedb && rm -rf /etc/enigma2/*.tv && rm -rf /etc/enigma2/*.radio && rm -rf /usr/share/enigma2/picon/*
+# copy over new bouquets
+cp -p $TMPDIR/update/list/*.xml /etc/tuxbox && cp -p $TMPDIR/update/list/* /$BOUQUETDIR
+# copy over new picon
+cp -p $TMPDIR/update/picon/* /$PICONDIR
+# Reload bouquets
+wget -qO - http://127.0.0.1/web/servicelistreload?mode=0
+echo
+echo 
+echo ----------------------------------------------------
+echo 
+echo "            ...BOUQUETS UPDATED...                "
+echo 
+echo ----------------------------------------------------
+echo 
+rm -rf $TMPDIR/update/* 2>/dev/null
+exit 0
