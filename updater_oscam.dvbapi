@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Adres URL do pliku oscam.dvbapi (zmień na odpowiedni URL)
+OSC_URL="http://example.com/oscam.dvbapi"
+DEST_FILE="/etc/tuxbox/config/oscam.dvbapi"
+TMP_FILE="/tmp/oscam.dvbapi"
+
+echo "=== Sprawdzanie aktualizacji pliku oscam.dvbapi ==="
+
+# Pobieranie najnowszej wersji pliku oscam.dvbapi
+echo "Pobieranie pliku oscam.dvbapi z ${OSC_URL}..."
+wget -q -O "${TMP_FILE}" "${OSC_URL}"
+
+# Sprawdzenie, czy plik został pobrany
+if [ ! -f "${TMP_FILE}" ]; then
+    echo "Błąd: Nie udało się pobrać pliku oscam.dvbapi."
+    exit 1
+fi
+
+# Porównanie sumy kontrolnej pobranego pliku z obecnym
+if [ -f "${DEST_FILE}" ]; then
+    # Obliczanie sumy kontrolnej MD5 pobranego pliku
+    NEW_CHECKSUM=$(md5sum "${TMP_FILE}" | awk '{print $1}')
+    
+    # Obliczanie sumy kontrolnej obecnego pliku
+    CURRENT_CHECKSUM=$(md5sum "${DEST_FILE}" | awk '{print $1}')
+    
+    # Porównanie sum kontrolnych
+    if [ "${NEW_CHECKSUM}" == "${CURRENT_CHECKSUM}" ]; then
+        echo "Plik oscam.dvbapi jest już aktualny. Brak potrzeby aktualizacji."
+        rm -f "${TMP_FILE}"
+        exit 0
+    fi
+fi
+
+# Zaktualizowanie pliku oscam.dvbapi
+echo "Nowa wersja pliku oscam.dvbapi. Aktualizacja..."
+mv -f "${TMP_FILE}" "${DEST_FILE}"
+
+# Usunięcie tymczasowego pliku
+rm -f "${TMP_FILE}"
+
+echo "Aktualizacja zakończona pomyślnie."
